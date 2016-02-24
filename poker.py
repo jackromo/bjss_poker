@@ -1,4 +1,4 @@
-
+import unittest
 
 class PokerCard(object):
 
@@ -116,30 +116,7 @@ class PokerHand(object):
         pass
 
 
-class PokerTester(object):
-
-    def __init__(self):
-        pass
-
-    def runTests(self):
-        self.test_card_compare()
-        self.test_card_sorted()
-        self.test_hand_1pair()
-        self.test_hand_get_pair_vals()
-        self.test_hand_2pairs()
-        self.test_hand_3kind()
-        self.test_hand_get_3kind()
-        self.test_hand_4kind()
-        self.test_hand_get_4kind()
-        self.test_hand_full_house()
-        self.test_hand_get_full_house()
-        self.test_hand_straight()
-        self.test_hand_get_straight()
-        self.test_hand_flush()
-        self.test_hand_get_flush()
-        self.test_hand_straight_flush()
-        self.test_hand_get_straight_flush()
-        self.test_hand_lt()
+class PokerTester(unittest.TestCase):
 
     def test_card_compare(self):
         for i, c1_val in enumerate(PokerCard.cards):
@@ -259,8 +236,8 @@ class PokerTester(object):
 
 
 def main():
-    tester = PokerTester()
-    tester.runTests()
+    suite = unittest.TestLoader().loadTestsFromTestCase(PokerTester)
+    unittest.TextTestRunner(verbosity=2).run(suite)
 
 if __name__ == "__main__":
     main()
