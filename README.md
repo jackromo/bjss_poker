@@ -1,0 +1,1 @@
+This is a quick project to create a poker hand for a BJSS coding challenge.
