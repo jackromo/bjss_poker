@@ -143,7 +143,43 @@ class PokerHand(object):
             else:
                 return False
         else:
-            return self.cards < other.cards
+            # Compare from largest to smallest
+            return list(reversed(self.cards)) < list(reversed(other.cards))
+
+    def __eq__(self, other):
+        return not ((self < other) or (other < self))
+
+
+class InputParser(object):
+    """
+    Takes file input and performs comparisons on pairs of hands.
+    """
+
+    def get_hand_from_line(self, line):
+        return PokerHand(line.split(" "))
+
+    def get_results_lines(self, lines):
+        result = []
+        for l1, l2 in lines:
+            hand1 = self.get_hand_from_line(l1)
+            hand2 = self.get_hand_from_line(l2)
+            if hand1 < hand2:
+                result.append(-1)
+            elif hand2 < hand1:
+                result.append(1)
+            else:
+                result.append(0)
+        return result
+
+    def parse_file(self, fdir):
+        """
+        File should be several pairs of adjacent lines.
+        Each line has a series of 5 space-separated string representations of cards in a hand.
+        """
+        f = open(fdir, "r")
+        lines = f.read().split("\n")
+        line_pairs = [(lines[i], lines[i+1]) for i in range(0, len(lines), 2)]
+        return self.get_results_lines(line_pairs)
 
 
 class PokerTester(unittest.TestCase):
@@ -264,10 +300,37 @@ class PokerTester(unittest.TestCase):
         hand2 = PokerHand(["2H", "3H", "4H", "5H", "5C"])
         assert(hand2 < hand)
 
+    def test_hand_eq(self):
+        hand = PokerHand(["2H", "3H", "4H", "5H", "6H"])
+        hand2 = PokerHand(["2H", "3H", "4H", "5H", "6H"])
+        assert(hand2 == hand)
+
+
+class InputParserTester(unittest.TestCase):
+
+    def test_get_hand_from_line(self):
+        parser = InputParser()
+        self.assertEqual(parser.get_hand_from_line("2C 2H 3H 4C 4H"), PokerHand(["2C", "2H", "3H", "4C", "4H"]))
+
+    def test_get_results_lines(self):
+        parser = InputParser()
+        lines = [("2C 2H 2D 2S 3C", "KC QC JC AC TC"),
+                 ("KC QC JC AC TC", "2C 2H 2D 2S 3C"),
+                 ("KC QC JC AC TC", "KC QC JC AC TC")]
+        self.assertEqual(parser.get_results_lines(lines), [-1, 1, 0])
+
+    def test_parse_file(self):
+        parser = InputParser()
+        self.assertEqual(parser.parse_file("./Input_Hands.txt"), [-1, 0, -1, -1])
+
 
 def main():
-    suite = unittest.TestLoader().loadTestsFromTestCase(PokerTester)
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    # Test PokerCard and PokerHand
+    suite_poker = unittest.TestLoader().loadTestsFromTestCase(PokerTester)
+    unittest.TextTestRunner(verbosity=2).run(suite_poker)
+    # Test InputParser
+    suite_parser = unittest.TestLoader().loadTestsFromTestCase(InputParserTester)
+    unittest.TextTestRunner(verbosity=2).run(suite_parser)
 
 if __name__ == "__main__":
     main()
