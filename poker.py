@@ -13,9 +13,13 @@ class PokerCard(object):
             self.suit = val[1]
 
     def __lt__(self, other):
+        if other == None:   # None is default lowest possible card.
+            return False
         return self.cards.index(self.val) < self.cards.index(other.val)
 
     def __eq__(self, other):
+        if other == None:
+            return False
         return self.cards.index(self.val) == self.cards.index(other.val)
 
 
@@ -46,37 +50,36 @@ class PokerHand(object):
         vals_count = [0 for _ in range(len(PokerCard.cards))]
         for c1 in self.cards:
             vals_count[PokerCard.cards.index(c1.val)] += 1
-        threes = []
+        threes_val = None
         for c_val, count in zip(PokerCard.cards, vals_count):
             if count == 3:
-                threes.append(PokerCard(c_val))
-        return threes
+                threes_val = PokerCard(c_val)
+        return threes_val
 
     def has_3kind(self):
-        return len(self.get_3kind()) > 0
+        return self.get_3kind() != None
 
     def get_4kind(self):
         vals_count = [0 for _ in range(len(PokerCard.cards))]
         for c1 in self.cards:
             vals_count[PokerCard.cards.index(c1.val)] += 1
-        fours = []
+        fours_val = None
         for c_val, count in zip(PokerCard.cards, vals_count):
             if count == 4:
-                fours.append(PokerCard(c_val))
-        return fours
+                fours_val = PokerCard(c_val)
+        return fours_val
 
     def has_4kind(self):
-        return len(self.get_4kind()) > 0
+        return self.get_4kind() != None
 
     def has_full_house(self):
-        # TODO: cleric of pythonism
         return self.has_3kind() and self.has_1pair()
 
     def get_full_house(self):
         if self.has_full_house():
             return self.get_3kind()
         else:
-            return []
+            return None
 
     def has_straight(self):
         count = 0
@@ -90,30 +93,56 @@ class PokerHand(object):
 
     def get_straight(self):
         if self.has_straight():
-            return [max(self.cards)]
+            return max(self.cards)
         else:
-            return []
+            return None
 
     def has_flush(self):
         return all(c1.suit == c2.suit for c1 in self.cards for c2 in self.cards)
 
     def get_flush(self):
         if self.has_flush():
-            return [max(self.cards)]
+            return max(self.cards)
         else:
-            return []
+            return None
 
     def has_straight_flush(self):
         return self.has_straight() and self.has_flush()
 
     def get_straight_flush(self):
         if self.has_straight_flush():
-            return [max(self.cards)]
+            return max(self.cards)
         else:
-            return []
+            return None
 
     def __lt__(self, other):
-        pass
+        """
+        Precedence of hands:
+        straight flush > 4 of a kind > full house > flush > straight > 3 of a kind > pairs > single
+        """
+        if self.get_straight_flush() != other.get_straight_flush():
+            return self.get_straight_flush() < other.get_straight_flush()
+        elif self.get_4kind() != other.get_4kind():
+            return self.get_4kind() < other.get_4kind()
+        elif self.get_full_house() != other.get_full_house():
+            return self.get_full_house() < other.get_full_house()
+        elif self.get_flush() != other.get_flush():
+            return self.get_flush() < other.get_flush()
+        elif self.get_straight() != other.get_straight():
+            return self.get_straight() < other.get_straight()
+        elif self.get_3kind() != other.get_3kind():
+            return self.get_3kind() < other.get_3kind()
+        elif self.get_pairs() != other.get_pairs():
+            if len(self.get_pairs()) != len(other.get_pairs):
+                return len(self.get_pairs()) < len(other.get_pairs)
+            elif self.get_pairs()[0] != other.get_pairs[0]:
+                return self.get_pairs()[0] < other.get_pairs()[0]
+            elif len(self.get_pairs()) == 2:
+                return self.get_pairs()[1] < other.get_pairs()[1]
+            else:
+                return False
+        else:
+            return self.cards < other.cards
 
 
 class PokerTester(unittest.TestCase):
@@ -161,9 +190,9 @@ class PokerTester(unittest.TestCase):
 
     def test_hand_get_3kind(self):
         hand = PokerHand(["5", "3", "3", "3", "4"])
-        assert(hand.get_3kind() == [PokerCard("3")])
+        assert(hand.get_3kind() == PokerCard("3"))
         hand2 = PokerHand(["2", "3", "4", "4", "5"])
-        assert(hand2.get_3kind() == [])
+        assert(hand2.get_3kind() == None)
 
     def test_hand_4kind(self):
         hand = PokerHand(["2", "4", "4", "4", "4"])
@@ -173,9 +202,9 @@ class PokerTester(unittest.TestCase):
 
     def test_hand_get_4kind(self):
         hand = PokerHand(["5", "3", "3", "3", "3"])
-        assert(hand.get_4kind() == [PokerCard("3")])
+        assert(hand.get_4kind() == PokerCard("3"))
         hand2 = PokerHand(["2", "3", "4", "4", "4"])
-        assert(hand2.get_4kind() == [])
+        assert(hand2.get_4kind() == None)
 
     def test_hand_full_house(self):
         hand = PokerHand(["3", "3", "3", "2", "2"])
@@ -185,9 +214,9 @@ class PokerTester(unittest.TestCase):
 
     def test_hand_get_full_house(self):
         hand = PokerHand(["5", "5", "3", "3", "3"])
-        assert(hand.get_full_house() == [PokerCard("3")])
+        assert(hand.get_full_house() == PokerCard("3"))
         hand2 = PokerHand(["2", "3", "4", "4", "4"])
-        assert(hand2.get_full_house() == [])
+        assert(hand2.get_full_house() == None)
 
     def test_hand_straight(self):
         hand = PokerHand(["2", "3", "4", "5", "6"])
@@ -197,9 +226,9 @@ class PokerTester(unittest.TestCase):
 
     def test_hand_get_straight(self):
         hand = PokerHand(["2", "3", "4", "5", "6"])
-        assert(hand.get_straight() == [PokerCard("6")])
+        assert(hand.get_straight() == PokerCard("6"))
         hand2 = PokerHand(["2", "3", "5", "6", "7"])
-        assert(hand2.get_straight() == [])
+        assert(hand2.get_straight() == None)
 
     def test_hand_flush(self):
         hand = PokerHand(["2H", "3H", "4H", "5H", "6H"])
@@ -209,9 +238,9 @@ class PokerTester(unittest.TestCase):
 
     def test_hand_get_flush(self):
         hand = PokerHand(["2H", "3H", "4H", "5H", "6H"])
-        assert(hand.get_flush() == [PokerCard("6H")])
+        assert(hand.get_flush() == PokerCard("6H"))
         hand2 = PokerHand(["2H", "3H", "5H", "6H", "7C"])
-        assert(hand2.get_flush() == [])
+        assert(hand2.get_flush() == None)
 
     def test_hand_straight_flush(self):
         hand = PokerHand(["2H", "3H", "4H", "5H", "6H"])
@@ -223,16 +252,16 @@ class PokerTester(unittest.TestCase):
 
     def test_hand_get_straight_flush(self):
         hand = PokerHand(["2H", "3H", "4H", "5H", "6H"])
-        assert(hand.get_straight_flush() == [PokerCard("6H")])
+        assert(hand.get_straight_flush() == PokerCard("6H"))
         hand2 = PokerHand(["2H", "3H", "5H", "6H", "7C"])
-        assert(hand2.get_straight_flush() == [])
+        assert(hand2.get_straight_flush() == None)
         hand3 = PokerHand(["2H", "3H", "5H", "6H", "8H"])
-        assert(hand3.get_straight_flush() == [])
+        assert(hand3.get_straight_flush() == None)
 
     def test_hand_lt(self):
         hand = PokerHand(["2H", "3H", "4H", "5H", "6H"])
         hand2 = PokerHand(["2H", "3H", "4H", "5H", "5C"])
-        assert(hand < hand2)
+        assert(hand2 < hand)
 
 
 def main():
